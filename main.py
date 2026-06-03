@@ -105,23 +105,27 @@ def block_resources(route: Route) -> None:
         return route.abort()
     return route.continue_()
 
-def scroll_modal(page: Page):
+def scroll_modal(page: Page, limit: int = 5):
     panel_selector = "div[style='padding: 0px 24px;']"
     panel = page.locator(panel_selector)
     previous_count = 0
+    scroll_limit = 0
 
     while True:
         panel.evaluate("el => el.scrollTo(0, el.scrollHeight)")
 
-        page.wait_for_timeout(1_500)
+        page.wait_for_timeout(2_000)
 
         current_count = page.locator("div[data-review-id]").count()
-        print(f"  → {current_count} avis chargés...")
 
         if current_count == previous_count:
             break
 
+        if scroll_limit == limit:
+            break
+
         previous_count = current_count
+        scroll_limit += 1
 
 
 def scrape_listing(page: Page, url: str) -> Dict:
@@ -208,7 +212,7 @@ def main(pw: Playwright):
     page = context.new_page()
     page.route("**/*", block_resources)
 
-    result = scrape_listing(page, URL_3)
+    result = scrape_listing(page, URL_1)
     save_to_json(result)
 
     page.close()
